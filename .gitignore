@@ -1,0 +1,27 @@
+# Python virtual environment files
+venv/
+
+# Python cache files
+__pycache__
+*.pyc
+
+# vscode settings
+.vscode/
+
+# Ignore NeST output
+*_dump/
+
+# logs
+*.log
+
+# Output on nest build
+nest.egg-info/
+nitk_nest.egg-info/
+dist/
+build/
+
+# Ignore video files and MPEG-DASH encoded chunks
+*.mp4
+*.m4s
+*.mpd
+*mpeg-dash-encoded-chunks*
