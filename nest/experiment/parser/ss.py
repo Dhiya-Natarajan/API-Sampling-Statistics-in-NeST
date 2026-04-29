@@ -48,7 +48,7 @@ class SsRunner(Runner):
 
     # pylint: disable=too-many-arguments
     def __init__(
-        self, ns_id, destination_ip, start_time, run_time, dst_ns, ss_filter=""
+        self, ns_id, destination_ip, start_time, run_time, dst_ns, ss_filter="", interval=0.2
     ):
         """
         Constructor to initialize ss runner
@@ -67,8 +67,11 @@ class SsRunner(Runner):
             destination network namespace of ss
         ss_filter : str
             to filter output from specific connections.
+        interval : float
+            sampling interval in seconds (default 0.2s / 200ms)
         """
         self.filter = ss_filter
+        self.interval = interval
         super().__init__(ns_id, start_time, run_time, destination_ip, dst_ns)
 
     def run(self):
@@ -85,6 +88,7 @@ class SsRunner(Runner):
                 f'"{self.filter}"',
                 self.start_time,
                 self.destination_address.is_ipv6(),
+                self.interval,
             ),
             error_string_prefix="Collecting socket stats",
         )

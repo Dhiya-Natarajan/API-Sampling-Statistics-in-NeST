@@ -118,7 +118,7 @@ def run_experiment(exp):
 
     # Contains start time and end time to run respective command
     # from a source netns to destination address (in destination netns)
-    ss_schedules = defaultdict(lambda: (float("inf"), float("-inf")))
+    ss_schedules = defaultdict(lambda: (float("inf"), float("-inf"), 0.2))
     ping_schedules = defaultdict(lambda: (float("inf"), float("-inf")))
 
     # Overall experiment stop time considering all flows
@@ -175,6 +175,7 @@ def run_experiment(exp):
                     ss_schedules,
                     destination_nodes["netperf"],
                     options["protocol"] == "MPTCP",
+                    interval=flow._ss_interval,  # pylint: disable=protected-access
                 )
                 exp_runners.netperf.extend(tcp_runners)
                 # Update destination nodes
@@ -192,6 +193,7 @@ def run_experiment(exp):
                     ss_schedules,
                     destination_nodes["iperf3"],
                     options["protocol"] == "MPTCP",
+                    interval=flow._ss_interval,  # pylint: disable=protected-access
                 )
                 exp_runners.iperf3.extend(tcp_runners)
                 # Update destination nodes
@@ -669,7 +671,7 @@ def get_dependency_status(exp, tools):
 
 
 def setup_tcp_flows(
-    dependencies, flow, ss_schedules, destination_nodes, is_mptcp=False
+    dependencies, flow, ss_schedules, destination_nodes, is_mptcp=False, interval=0.2
 ):
     """
     Setup netperf/iperf3 to run tcp flows
@@ -685,6 +687,8 @@ def setup_tcp_flows(
         Destination nodes so far already running netperf/iperf3 server
     is_mptcp:
         boolean to determine if connection is MPTCP enabled
+    interval: float
+        ss sampling interval in seconds for this flow
 
     Returns
     -------
@@ -814,10 +818,11 @@ def setup_tcp_flows(
                 start_t,
                 stop_t,
                 ss_schedules,
+                interval,
             )
     else:
         ss_schedules = _get_start_stop_time_for_ss(
-            src_ns, dst_ns, dst_addr, start_t, stop_t, ss_schedules
+            src_ns, dst_ns, dst_addr, start_t, stop_t, ss_schedules, interval
         )
     return tcp_runners, ss_schedules
 
@@ -911,13 +916,15 @@ def setup_ss_runners(dependency, ss_schedules, ss_filter):
             src_ns = key[0]
             dst_ns = key[1]
             dst_addr = key[2]
+            start_t, stop_t, interval = timings
             ss_runner = SsRunner(
                 src_ns,
                 dst_addr,
-                timings[0],
-                timings[1] - timings[0],
+                start_t,
+                stop_t - start_t,
                 dst_ns,
                 ss_filter=ss_filter,
+                interval=interval,
             )
             runners.append(ss_runner)
     else:
@@ -1289,7 +1296,7 @@ def cleanup():
 # Helper methods
 # pylint: disable=too-many-arguments
 def _get_start_stop_time_for_ss(
-    src_ns, dst_ns, dst_addr, start_t, stop_t, ss_schedules
+    src_ns, dst_ns, dst_addr, start_t, stop_t, ss_schedules, interval=0.2
 ):
     """
     Find the start time and stop time to run ss command in node `src_ns`
@@ -1309,18 +1316,21 @@ def _get_start_stop_time_for_ss(
         Stop time of ss command
     ss_schedules: list
         List with ss command schedules
+    interval: float
+        ss sampling interval in seconds for this flow (default 0.2s)
 
     Returns
     -------
     List: Updated ss_schedules
     """
     if (src_ns, dst_ns, dst_addr) not in ss_schedules:
-        ss_schedules[(src_ns, dst_ns, dst_addr)] = (start_t, stop_t)
+        ss_schedules[(src_ns, dst_ns, dst_addr)] = (start_t, stop_t, interval)
     else:
-        (min_start, max_stop) = ss_schedules[(src_ns, dst_ns, dst_addr)]
+        (min_start, max_stop, existing_interval) = ss_schedules[(src_ns, dst_ns, dst_addr)]
         ss_schedules[(src_ns, dst_ns, dst_addr)] = (
             min(min_start, start_t),
             max(max_stop, stop_t),
+            min(existing_interval, interval),  # finer granularity wins when flows share a key
         )
 
     return ss_schedules

@@ -75,6 +75,7 @@ class Flow:
 
         self._options = {"protocol": "TCP", "cong_algo": "cubic"}
         self.user_input_options = {}
+        self._ss_interval = 0.2  # default 200ms
 
     @property
     def source_address(self):
@@ -125,6 +126,40 @@ class Flow:
             f" {self.destination_address!r}), {self.start_time!r}, {self.stop_time!r}"
             f" {self.number_of_streams!r})"
         )
+
+    def set_ss_interval(self, interval: float):
+        """
+        Set the ss (socket statistics) sampling interval for this flow.
+
+        Parameters
+        ----------
+        interval : float
+            Sampling interval in seconds. Must be >= 0.01s (10ms Linux jiffy
+            boundary). Values below 10ms incur high overhead and are clamped.
+            Values >= flow duration may result in no stats being collected.
+        """
+        # pylint: disable=invalid-name
+        MIN_SS_INTERVAL = 0.01  # 10ms — Linux jiffy boundary
+
+        if interval < MIN_SS_INTERVAL:
+            logger.warning(
+                "ss interval %.4fs is below 10ms (Linux jiffy boundary). "
+                "Overhead will be high. Clamping to %.4fs.",
+                interval,
+                MIN_SS_INTERVAL,
+            )
+            interval = MIN_SS_INTERVAL
+
+        flow_duration = self.stop_time - self.start_time
+        if interval >= flow_duration:
+            logger.warning(
+                "ss interval %.4fs >= flow duration %ds. "
+                "Statistics may not be collected for this flow.",
+                interval,
+                flow_duration,
+            )
+
+        self._ss_interval = interval
 
     @property
     def protocol(self):

@@ -6,7 +6,7 @@ from .exec import exec_exp_commands
 
 # pylint: disable=too-many-arguments
 def run_ss(
-    ns_id, iterator, destination_ip, duration, ss_filter, start_time, ipv6, out, err
+    ns_id, iterator, destination_ip, duration, ss_filter, start_time, ipv6, interval, out, err
 ):
     """
     Executes the ss iterator script
@@ -27,6 +27,8 @@ def run_ss(
         filter to remove unnecessary output from ss
     ipv6 : bool
         determines if destination_ip is ipv4/ipv6
+    interval : float
+        sampling interval in seconds for ss
     out : File
         temporary file to hold the stats
     err : File
@@ -39,15 +41,15 @@ def run_ss(
     """
     if ipv6:
         return exec_exp_commands(
-            f"ip netns exec {ns_id} /bin/bash {iterator} [{destination_ip}] \
-                                    {duration} {ss_filter}  {start_time}",
+            f"ip netns exec {ns_id} /bin/bash {iterator} [{destination_ip}] "
+            f"{duration} {ss_filter} {start_time} {interval}",
             stdout=out,
             stderr=err,
         )
 
     return exec_exp_commands(
-        f"ip netns exec {ns_id} /bin/bash {iterator} {destination_ip} \
-                                {duration} {ss_filter}  {start_time}",
+        f"ip netns exec {ns_id} /bin/bash {iterator} {destination_ip} "
+        f"{duration} {ss_filter} {start_time} {interval}",
         stdout=out,
         stderr=err,
     )
