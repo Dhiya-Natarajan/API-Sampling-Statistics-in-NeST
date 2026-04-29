@@ -15,7 +15,7 @@ sleep $start_time
 
 # Runs the ss command for `duration`s every `INTERVAL`s
 # Output of each ss iteration is separated by `---`
-for i in $(seq 0 $INTERVAL $duration); do
+for i in $(seq 1 $INTERVAL $duration); do
 	echo "timestamp:$(date +%s.%N)"
 	eval $command
 	if [ $? -ne 0 ]; then
