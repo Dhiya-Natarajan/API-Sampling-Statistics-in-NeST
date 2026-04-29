@@ -49,41 +49,41 @@ exp = Experiment("test-ss-interval")
 # Case 1: no interval set — uses default 200ms
 flow1 = Flow(h1, h2, eth2.get_address(), 0, 30, 1)
 exp.add_tcp_flow(flow1)
-print(f"[Case 1] flow1 ss_interval (expect 0.2): {flow1._ss_interval}")
+print(f"[Case 1] flow1 ss_interval (expect 0.2): {flow1.ss_interval}")
 
 # Case 2: valid interval — 500ms
 flow2 = Flow(h1, h2, eth2.get_address(), 0, 30, 1)
 flow2.set_ss_interval(0.5)
 exp.add_tcp_flow(flow2)
-print(f"[Case 2] flow2 ss_interval (expect 0.5): {flow2._ss_interval}")
+print(f"[Case 2] flow2 ss_interval (expect 0.5): {flow2.ss_interval}")
 
 # Case 3: interval below 10ms — should warn and clamp to 0.01
 flow3 = Flow(h1, h2, eth2.get_address(), 0, 30, 1)
 flow3.set_ss_interval(0.005)
 exp.add_tcp_flow(flow3)
-print(f"[Case 3] flow3 ss_interval (expect 0.01): {flow3._ss_interval}")
+print(f"[Case 3] flow3 ss_interval (expect 0.01): {flow3.ss_interval}")
 
 # Case 4: interval >= flow duration — should warn but still set
 flow4 = Flow(h1, h2, eth2.get_address(), 0, 30, 1)
 flow4.set_ss_interval(35.0)
 exp.add_tcp_flow(flow4)
-print(f"[Case 4] flow4 ss_interval (expect 35.0): {flow4._ss_interval}")
+print(f"[Case 4] flow4 ss_interval (expect 35.0): {flow4.ss_interval}")
 
 # Case 5: two flows from different sources, one sets interval, one does not
 flow5a = Flow(h1, h2, eth2.get_address(), 0, 30, 1)
 flow5a.set_ss_interval(0.1)
 exp.add_tcp_flow(flow5a)
-print(f"[Case 5a] flow5a ss_interval (expect 0.1): {flow5a._ss_interval}")
+print(f"[Case 5a] flow5a ss_interval (expect 0.1): {flow5a.ss_interval}")
 
 flow5b = Flow(h3, h2, eth2.get_address(), 0, 30, 1)
 exp.add_tcp_flow(flow5b)
-print(f"[Case 5b] flow5b ss_interval (expect 0.2): {flow5b._ss_interval}")
+print(f"[Case 5b] flow5b ss_interval (expect 0.2): {flow5b.ss_interval}")
 
 # Case 6: multiple streams (number_of_streams=4) with custom interval
 flow6 = Flow(h1, h2, eth2.get_address(), 0, 30, 4)
 flow6.set_ss_interval(0.3)
 exp.add_tcp_flow(flow6)
-print(f"[Case 6] flow6 streams=4, ss_interval (expect 0.3): {flow6._ss_interval}")
+print(f"[Case 6] flow6 streams=4, ss_interval (expect 0.3): {flow6.ss_interval}")
 
 print("\nAll cases verified. Running experiment...")
 exp.run()

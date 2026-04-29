@@ -127,6 +127,7 @@ class Flow:
             f" {self.number_of_streams!r})"
         )
 
+    @input_validator
     def set_ss_interval(self, interval: float):
         """
         Set the ss (socket statistics) sampling interval for this flow.
@@ -140,6 +141,11 @@ class Flow:
         """
         # pylint: disable=invalid-name
         MIN_SS_INTERVAL = 0.01  # 10ms — Linux jiffy boundary
+
+        if interval <= 0:
+            raise ValueError(
+                f"ss interval must be a positive value, got {interval}."
+            )
 
         if interval < MIN_SS_INTERVAL:
             logger.warning(
@@ -160,6 +166,11 @@ class Flow:
             )
 
         self._ss_interval = interval
+
+    @property
+    def ss_interval(self):
+        """Getter for ss sampling interval"""
+        return self._ss_interval
 
     @property
     def protocol(self):
